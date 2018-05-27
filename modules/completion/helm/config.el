@@ -14,12 +14,12 @@
   :init
   (setq helm-quick-update t
         ;; Speedier without fuzzy matching
-        helm-mode-fuzzy-match nil
-        helm-buffers-fuzzy-matching nil
-        helm-apropos-fuzzy-match nil
+        helm-mode-fuzzy-match t
+        helm-buffers-fuzzy-matching t
+        helm-apropos-fuzzy-match t
         helm-M-x-fuzzy-match nil
-        helm-recentf-fuzzy-match nil
-        helm-projectile-fuzzy-match nil
+        helm-recentf-fuzzy-match t
+        helm-projectile-fuzzy-match t
         ;; Display extraineous helm UI elements
         helm-display-header-line nil
         helm-ff-auto-update-initial-value nil
@@ -49,7 +49,7 @@
   (defun +helm*replace-prompt (plist)
     "Globally replace helm prompts with `+helm-global-prompt'."
     (if (keywordp (car plist))
-        (plist-put plist :prompt +helm-global-prompt)
+        (plist-put p(helm-mode 1)list :prompt +helm-global-prompt)
       (setf (nth 2 plist) +helm-global-prompt)
       plist))
   (advice-add #'helm :filter-args #'+helm*replace-prompt)
