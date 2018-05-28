@@ -91,8 +91,9 @@
                (buffer-name))
              (count-lines (point-min) (point-max))
              (buffer-size)))
-  (setq save-silently t)
-  (add-hook 'after-save-hook #'+evil|save-buffer)
+  (unless noninteractive
+    (setq save-silently t)
+    (add-hook 'after-save-hook #'+evil|save-buffer))
   ;; Make ESC (from normal mode) the universal escaper. See `doom-escape-hook'.
   (advice-add #'evil-force-normal-state :after #'doom/escape)
   ;; Don't move cursor when indenting
@@ -292,7 +293,7 @@ the new algorithm is confusing, like in python or ruby."
              fn '((:default . evil-mc-execute-default-call))))
 
   ;; disable evil-escape in evil-mc; causes unwanted text on invocation
-  (add-to-list 'evil-mc-incompatible-minor-modes 'evil-escape-mode #'eq)
+  (add-to-list 'evil-mc-incompatible-minor-modes 'evil-escape-mode nil #'eq)
 
   (defun +evil|escape-multiple-cursors ()
     "Clear evil-mc cursors and restore state."
