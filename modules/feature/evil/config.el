@@ -3,17 +3,39 @@
 ;; I'm a vimmer at heart. Its modal philosophy suits me better, and this module
 ;; strives to make Emacs a much better vim than vim was.
 
+(defvar +evil-collection-disabled-list
+  '(kotlin-mode ; doesn't do anything useful
+    simple)     ; ditto
+  "A list of `evil-collection' modules to disable. See the definition of this
+variable for an explanation of the defaults (in comments). See
+`evil-collection-mode-list' for a list of available options.")
+
+
 (def-package! evil-collection
   :when (featurep! +everywhere)
   :defer 1
   :after-call post-command-hook
   :preface
-  ;; must be set before evil/evil-collcetion is loaded
+  ;; must be set before evil/evil-collection is loaded
   (setq evil-want-integration nil
         evil-collection-company-use-tng nil)
   :config
-  (delq 'kotlin-mode evil-collection-mode-list) ; doesn't do anything useful
-  (delq 'simple evil-collection-mode-list) ; breaks too much
+  ;; Until evil-collection#101 is resolved
+  (defun +evil*fix-evil-collection-fix-helm-bs ()
+    "Prevents `with-helm-buffer' void-function errors when loading helm."
+    (when (with-current-buffer (helm-buffer-get) helm-echo-input-in-header-line)
+      (let ((ov (make-overlay (point-min) (point-max) nil nil t)))
+        (overlay-put ov 'window (selected-window))
+        (overlay-put ov 'face (let ((bg-color (face-background 'default nil)))
+                                `(:background ,bg-color :foreground ,bg-color)))
+        (setq-local cursor-type nil))))
+  (advice-add #'evil-collection-helm-hide-minibuffer-maybe :override
+              #'+evil*fix-evil-collection-fix-helm-bs)
+
+  (dolist (sym +evil-collection-disabled-list)
+    (setq evil-collection-mode-list
+          (funcall (if (symbolp sym) #'delq #'delete)
+                   sym evil-collection-mode-list)))
   (evil-collection-init))
 
 
@@ -286,6 +308,13 @@ the new algorithm is confusing, like in python or ruby."
   :config
   (global-evil-mc-mode +1)
 
+  (after! smartparens
+    ;; Make evil-mc cooperate with smartparens better
+    (unless (memq (car sp--mc/cursor-specific-vars) (cdr (assq :default evil-mc-cursor-variables)))
+      (setcdr (assq :default evil-mc-cursor-variables)
+              (append (cdr (assq :default evil-mc-cursor-variables))
+                      sp--mc/cursor-specific-vars))))
+
   ;; Add custom commands to whitelisted commands
   (dolist (fn '(doom/backward-to-bol-or-indent doom/forward-to-last-non-comment-or-eol
                 doom/backward-kill-to-bol-and-indent))
@@ -315,6 +344,7 @@ the new algorithm is confusing, like in python or ruby."
         evil-snipe-char-fold t
         evil-snipe-aliases '((?\; "[;:]")))
   :config
+  (add-to-list 'evil-snipe-disabled-modes 'Info-mode nil #'eq)
   (evil-snipe-mode +1)
   (evil-snipe-override-mode +1))
 

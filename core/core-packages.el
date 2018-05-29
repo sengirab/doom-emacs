@@ -268,7 +268,10 @@ to least)."
       (unless (or force-p noninteractive)
         (doom//reload-package-autoloads))))
   ;; Initialize Doom core
+  (require 'core-os)
   (unless noninteractive
+    (add-hook! 'emacs-startup-hook
+      #'(doom|post-init doom|display-benchmark))
     (require 'core-ui)
     (require 'core-editor)
     (require 'core-projects)
@@ -282,10 +285,6 @@ non-nil."
     ;; Set `doom-init-modules-p' early, so `doom-pre-init-hook' won't infinitely
     ;; recurse by accident if any of them need `doom-initialize-modules'.
     (setq doom-init-modules-p t)
-    (unless noninteractive
-      (add-hook! 'emacs-startup-hook
-        #'(doom|post-init doom|display-benchmark)))
-    (run-hooks 'doom-pre-init-hook)
     (when doom-private-dir
       (let ((load-prefer-newer t))
         (load (expand-file-name "init" doom-private-dir)
@@ -478,8 +477,7 @@ added, if the file exists."
                      (flags  (if (listp m) (cdr m))))
                  (if-let* ((path (doom-module-locate-path category module)))
                      (doom-module-set category module :flags flags :path path)
-                   (when doom-debug-mode
-                     (message "Couldn't find the %s %s module" category module))))))))
+                   (warn "Couldn't find the %s %s module" category module)))))))
     doom-modules))
 
 
